@@ -1,0 +1,41 @@
+import pandas as pd
+pd.set_option('display.max_columns', None)
+
+compras = pd.read_csv('VendasGrano_csv.csv', encoding='latin1', delimiter=';')
+
+print(compras.head())
+
+empresas_fornecedores = compras['Fornecedor'].drop_duplicates()
+print(empresas_fornecedores)
+
+frequencia_fornecedores = compras['Fornecedor'].value_counts()
+print(frequencia_fornecedores)
+
+produtos_umehara = compras[compras['Fornecedor'] == 'UMEHARA ALIMENTOS LTDA']['Descrição Material'].unique()
+print(produtos_umehara)
+
+produtos_hortifruti_genesis = compras[compras['Fornecedor'] == 'Hortifruti Genesis Ltda']['Descrição Material'].unique()
+print(produtos_hortifruti_genesis)
+
+produtos_unidos = compras[compras['Fornecedor'] == 'Supermercados unidos (pai da luiza)']['Descrição Material'].unique()
+print(produtos_unidos)
+
+def valores_por_fornecedor(compras, top_fornecedores, itens_semelhantes):
+    if compras['Total (R$)'].dtype == 'O':
+        compras['Total (R$)'] = compras['Total (R$)'].str.replace('.', '').str.replace(',', '.').astype(float)
+
+    produtos_com_mais_de_um_fornecedor = itens_semelhantes(compras, top_fornecedores)
+
+    for produto in produtos_com_mais_de_um_fornecedor:
+        print('Produto:', produto)
+        fornecedores_produto = compras[compras['Descrição Material'] == produto].groupby('Fornecedor').agg({'Total (R$)': ['sum', 'count']}).reset_index()
+        for index, row in fornecedores_produto.iterrows():
+            fornecedor = row['Fornecedor']
+            total_gasto = row[('Total (R$)', 'sum')]
+            vezes_comprado = row[('Total (R$)', 'count')]
+            print(f'Fornecedor: {fornecedor}')
+            print(f'Quantidade de compras: {vezes_comprado}')
+            print(f'Total gasto: {total_gasto}')
+        print()
+top_fornecedores = ['UMEHARA ALIMENTOS LTDA', 'Hortifruti Genesis Ltda', 'Supermercados unidos (pai da luiza)']
+valores_por_fornecedor(compras, top_fornecedores, itens_semelhantes)
